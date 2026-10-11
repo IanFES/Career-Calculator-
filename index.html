@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Career Path Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: workbench with inputs on the left and a live readout on the right, then real client results, then the booking step. Readout labels use a mono face because the subject is a code career. */
+:root{
+  --bg:#F7F7F9;
+  --surface:#FFFFFF;
+  --ink:#1C1C22;
+  --muted:#5C5F6E;
+  --line:#E2E2EA;
+  --accent:#4F46E5;
+  --accent-ink:#FFFFFF;
+  --accent-soft:#E1E1FA;
+  --gain:#0A7F5A;
+  --gain-soft:#DCF3EA;
+  --warn:#9A5B00;
+  --warn-soft:#FBEBCB;
+  --book-bg:#4F46E5;
+  --book-fg:#FFFFFF;
+  --book-cta-bg:#FFFFFF;
+  --book-cta-fg:#3A32C8;
+  --font-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F0F17;--surface:#181826;--ink:#ECECF5;--muted:#A3A3BA;--line:#2C2C44;
+    --accent:#8F89FF;--accent-ink:#0F0F17;--accent-soft:#27274D;
+    --gain:#3FCFA3;--gain-soft:#12312A;--warn:#F0B659;--warn-soft:#352A12;
+    --book-bg:#4F46E5;--book-fg:#FFFFFF;--book-cta-bg:#FFFFFF;--book-cta-fg:#3A32C8;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F0F17;--surface:#181826;--ink:#ECECF5;--muted:#A3A3BA;--line:#2C2C44;
+  --accent:#8F89FF;--accent-ink:#0F0F17;--accent-soft:#27274D;
+  --gain:#3FCFA3;--gain-soft:#12312A;--warn:#F0B659;--warn-soft:#352A12;
+  --book-bg:#4F46E5;--book-fg:#FFFFFF;--book-cta-bg:#FFFFFF;--book-cta-fg:#3A32C8;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.55;padding-inline:16px;padding-block:28px 48px}
+.wrap{max-width:1080px;margin-inline:auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.1;letter-spacing:-0.01em}
+p{margin:0}
+.eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* header */
+.top{display:flex;flex-direction:column;gap:10px;max-width:46rem}
+.top h1{font-size:clamp(2rem,5.5vw,3.25rem);font-weight:800}
+.top p.lede{color:var(--muted);font-size:1.0625rem;max-width:42rem}
+
+/* workbench */
+.bench{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px;align-items:start}
+@media (max-width:860px){.bench{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px}
+.panel-head{display:flex;flex-direction:column;gap:4px;margin-bottom:18px}
+.panel-head h2{font-size:1.5rem;font-weight:700}
+form{display:flex;flex-direction:column;gap:20px}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0;border:0;padding:0;margin:0}
+.field>label,.field>legend{font-weight:600;font-size:.9375rem;padding:0}
+.hint{font-size:.8125rem;color:var(--muted)}
+input[type=text],input[type=number],select{
+  font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:10px 12px;width:100%;min-width:0}
+input[type=number]{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.money{display:flex;align-items:center;gap:8px}
+.money span{font-family:var(--font-mono);color:var(--muted)}
+input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+.rangeline{display:flex;align-items:center;gap:12px}
+.rangeline output{font-family:var(--font-mono);font-variant-numeric:tabular-nums;min-width:4.5rem;text-align:right;font-weight:500}
+.choices{display:grid;gap:8px}
+.choices.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:420px){.choices.two{grid-template-columns:minmax(0,1fr)}}
+.choice{position:relative}
+.choice input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.choice span{display:block;border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:10px 12px;font-size:.9375rem;line-height:1.35;pointer-events:none}
+.choice input:checked+span{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent);font-weight:500}
+.choice input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+
+/* readout */
+.readout{position:sticky;top:env(safe-area-inset-top,0px);margin-top:0}
+@media (max-width:860px){.readout{position:static}}
+.big{display:flex;flex-direction:column;gap:6px;padding:16px;border-radius:8px;background:var(--gain-soft);color:var(--ink);margin-bottom:16px}
+.big.flat{background:var(--warn-soft)}
+.big .k{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gain)}
+.big.flat .k{color:var(--warn)}
+.big .v{font-family:var(--font-display);font-weight:800;font-size:clamp(1.75rem,4.6vw,2.5rem);line-height:1.05;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.big .s{font-size:.9375rem;color:var(--muted)}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:16px}
+@media (max-width:520px){.tiles{grid-template-columns:minmax(0,1fr)}}
+.tile{border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile .k{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font-family:var(--font-mono);font-weight:500;font-size:1.125rem;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.bars{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.bar-row{display:grid;grid-template-columns:7.5rem minmax(0,1fr) auto;gap:10px;align-items:center;font-size:.875rem}
+@media (max-width:520px){.bar-row{grid-template-columns:minmax(0,1fr) auto}.bar-row .track{grid-column:1 / -1;order:3}}
+.bar-row .lab{color:var(--muted)}
+.track{height:14px;background:var(--bg);border-radius:3px;position:relative;overflow:hidden;border:1px solid var(--line)}
+.fill{position:absolute;inset:0 auto 0 0;background:var(--muted);width:0}
+.fill.range{background:var(--accent);opacity:.35}
+.fill.solid{background:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.fill{transition:width .35s ease}}
+.bar-row .val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:.8125rem;white-space:nowrap}
+.callout{border-left:3px solid var(--accent);background:var(--accent-soft);padding:12px 14px;border-radius:0 6px 6px 0;margin-bottom:16px}
+.callout h3{font-size:1rem;font-family:var(--font-body);font-weight:600;margin-bottom:4px;letter-spacing:0}
+.callout p{font-size:.9375rem}
+.paths{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.path{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:12px 14px;border-top:1px solid var(--line)}
+.path:first-child{border-top:0}
+.path.primary{background:var(--accent-soft)}
+.path .n{font-weight:600}
+.path .r{font-family:var(--font-mono);font-size:.8125rem;font-variant-numeric:tabular-nums;white-space:nowrap;align-self:start}
+.path .d{grid-column:1 / -1;font-size:.875rem;color:var(--muted)}
+.path .tag{display:inline-block;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;background:var(--accent);color:var(--accent-ink);border-radius:3px;padding:1px 6px;margin-left:8px;vertical-align:2px}
+.fine{font-size:.8125rem;color:var(--muted);margin-top:14px}
+
+/* results */
+.sec{display:flex;flex-direction:column;gap:16px}
+.sec-head{display:flex;flex-direction:column;gap:6px;max-width:44rem}
+.sec-head h2{font-size:clamp(1.5rem,3.6vw,2rem);font-weight:700}
+.sec-head p{color:var(--muted)}
+.cases{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr));gap:14px}
+.case{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.cname{font-family:var(--font-display);font-size:1.25rem}
+.swap{display:flex;flex-direction:column;gap:12px}
+.swap .cell{display:flex;flex-direction:column;gap:2px;min-width:0}
+.swap .cell .k{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.swap .cell .v{font-weight:500;overflow-wrap:anywhere}
+.swap .cell.after .v{color:var(--gain)}
+.case .time{font-size:.875rem;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.case .story{margin-top:auto;font-weight:600;font-size:.9375rem}
+
+/* booking */
+.book{background:var(--book-bg);color:var(--book-fg);border-radius:12px;padding:clamp(22px,4vw,36px);display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.book .eyebrow{color:var(--book-fg);opacity:.8}
+.book h2{font-size:clamp(1.5rem,3.6vw,2.25rem);font-weight:800;max-width:30rem}
+.book p{max-width:36rem;opacity:.85}
+.cta{display:inline-block;background:var(--book-cta-bg);color:var(--book-cta-fg);text-decoration:none;font-weight:600;padding:14px 22px;border-radius:8px;font-size:1.0625rem}
+.cta:hover{filter:brightness(.95)}
+.book :focus-visible{outline-color:var(--book-fg)}
+.book .steps{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:var(--font-mono);font-size:.8125rem;opacity:.85}
+.foot{font-size:.8125rem;color:var(--muted);max-width:46rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Front End Simplified</span>
+    <h1>Career Path Calculator</h1>
+    <p class="lede">Enter what you earn now. See what a remote tech career could pay, where your current job is holding you back, and which path fits you first.</p>
+  </header>
+
+  <section class="bench" aria-label="Calculator">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="eyebrow">Step 1 of 4</span>
+        <h2>Your numbers</h2>
+      </div>
+      <form id="calc" autocomplete="off" novalidate>
+        <div class="field">
+          <label for="name">First name</label>
+          <input type="text" id="name" placeholder="Optional" maxlength="30">
+        </div>
+
+        <div class="field">
+          <label for="income">Monthly income before tax</label>
+          <div class="money"><span>$</span><input type="number" id="income" min="0" max="100000" step="50" value="3500" inputmode="numeric"></div>
+          <input type="range" id="incomeRange" min="500" max="15000" step="100" value="3500" aria-label="Monthly income slider">
+        </div>
+
+        <div class="field">
+          <label for="hours">Hours you work per week</label>
+          <div class="rangeline">
+            <input type="range" id="hours" min="10" max="70" step="1" value="40">
+            <output id="hoursOut" for="hours">40 hrs</output>
+          </div>
+        </div>
+
+        <fieldset class="field">
+          <legend>What are you after?</legend>
+          <div class="choices two">
+            <label class="choice"><input type="radio" name="goal" value="switch" checked><span>Change careers into remote tech</span></label>
+            <label class="choice"><input type="radio" name="goal" value="side"><span>Add income on the side</span></label>
+          </div>
+        </fieldset>
+
+        <div class="field" id="addWrap" hidden>
+          <label for="addHours">Extra hours per week you could put in</label>
+          <div class="rangeline">
+            <input type="range" id="addHours" min="3" max="25" step="1" value="10">
+            <output id="addOut" for="addHours">10 hrs</output>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="exp">Your experience with tech</label>
+          <select id="exp">
+            <option value="none">None yet</option>
+            <option value="some">I have tinkered or taken a course</option>
+            <option value="coding">I have built things in code</option>
+          </select>
+        </div>
+
+        <fieldset class="field">
+          <legend>What holds you back most right now?</legend>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="pain" value="time" checked><span>My income depends on my hours</span></label>
+            <label class="choice"><input type="radio" name="pain" value="ceiling"><span>My pay has hit a ceiling</span></label>
+            <label class="choice"><input type="radio" name="pain" value="direction"><span>I do not know where to start</span></label>
+            <label class="choice"><input type="radio" name="pain" value="flex"><span>I need flexibility and remote work</span></label>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+
+    <aside class="panel readout" aria-live="polite" aria-label="Your results">
+      <div class="panel-head">
+        <span class="eyebrow">Step 2 of 4</span>
+        <h2 id="readTitle">Your path</h2>
+      </div>
+      <div class="big" id="big">
+        <span class="k" id="bigK"></span>
+        <span class="v" id="bigV"></span>
+        <span class="s" id="bigS"></span>
+      </div>
+      <div class="tiles" id="tiles"></div>
+      <div class="bars" id="bars" aria-label="Hourly rate comparison"></div>
+      <div class="callout">
+        <h3 id="bnTitle"></h3>
+        <p id="bnText"></p>
+      </div>
+      <div class="eyebrow" style="margin-bottom:8px">Best-fit paths for you</div>
+      <div class="paths" id="paths"></div>
+      <p class="fine">Estimates use typical entry-level remote rates and assume steady work. Results vary by person and are not guaranteed.</p>
+    </aside>
+  </section>
+
+  <section class="sec" aria-labelledby="resHead">
+    <div class="sec-head">
+      <span class="eyebrow">Step 3 of 4</span>
+      <h2 id="resHead">People who already made the switch</h2>
+      <p>Three students tell their own story in their own words. Find the one closest to where you are now.</p>
+    </div>
+    <div class="cases" id="cases"></div>
+  </section>
+
+  <section class="book" aria-labelledby="bookHead">
+    <span class="eyebrow">Step 4 of 4</span>
+    <h2 id="bookHead">Book your implementation call</h2>
+    <p id="bookText">Bring your numbers from above. We will map your first 90 days, check if the path fits your schedule, and answer your questions.</p>
+    <a class="cta" id="cta" href="#" target="_blank" rel="noopener noreferrer">Pick a time</a>
+    <div class="steps"><span>15 to 30 minutes</span><span>No pressure</span><span>Your numbers pre-loaded</span></div>
+  </section>
+
+  <p class="foot">Income figures are estimates for illustration. They are based on typical entry-level remote rates, are not a promise of earnings, and depend on your effort, time and market conditions.</p>
+</div>
+
+<script>
+/* Edit these values before sending the link out. */
+const CONFIG = {
+  calendlyUrl: "https://calendly.com/ian-fesinstitute/30min",
+  weeksPerMonth: 4.33,
+  expMultiplier: { none: 1, some: 1.15, coding: 1.3 },
+  paths: {
+    webdev: { name: "Junior Web Developer", lo: 30, hi: 50, desc: "Build and maintain websites and web apps for companies or clients. Highest long-term ceiling." },
+    nocode: { name: "No-Code and Low-Code Builder", lo: 25, hi: 42, desc: "Build apps, automations and sites with visual tools. Fastest route to a first paid project." },
+    qa:     { name: "QA and Software Tester", lo: 22, hi: 36, desc: "Test software before release and report bugs. A common first step into tech." }
+  },
+  pathOrder: { none: ["nocode","qa","webdev"], some: ["webdev","nocode","qa"], coding: ["webdev","nocode","qa"] },
+  results: [
+    { name: "Mohamed Zreika", before: "Working a grocery checkout and part-time jobs while studying business", after: "Frontend developer at a tech startup", note: "Finished the 12-week program and says it helped him make more money with fewer hours.", url: "https://medium.com/@mohamed_20729/from-minimum-wage-to-making-a-difference-my-frontend-simplified-review-d11a56961ac8" },
+    { name: "Deana", before: "University student paying over $10,000 a year for classes", after: "$44/hr internship at Atlassian, then a 6-figure return offer", note: "", url: "https://medium.com/@deana.elmadi/from-frontend-simplified-to-6-figure-offer-at-atlassian-58c7de2f758a" },
+    { name: "Ryan Rahman", before: "Complete beginner", after: "$200k+ offer from Meta", note: "Had a $175k offer from Amazon within 6 months of starting.", url: "https://medium.com/@ryan.rahman901/from-beginner-to-200k-offers-my-frontend-simplified-review-11e07af7aa71" }
+  ]
+};
+
+const $ = (id) => document.getElementById(id);
+const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+const usd = (n) => "$" + Math.round(n).toLocaleString("en-US");
+const usd1 = (n) => "$" + (Math.round(n * 10) / 10).toFixed(1);
+const radio = (name) => (document.querySelector('input[name="' + name + '"]:checked') || {}).value;
+
+function calc(i) {
+  const W = CONFIG.weeksPerMonth;
+  const order = CONFIG.pathOrder[i.exp];
+  const mult = CONFIG.expMultiplier[i.exp];
+  const p = CONFIG.paths[order[0]];
+  const lo = p.lo * mult, hi = p.hi * mult, mid = (lo + hi) / 2;
+  const nowRate = i.income / (i.hours * W);
+  const out = { order, lo, hi, mid, nowRate, mult, primary: p };
+  if (i.goal === "side") {
+    out.monthLo = lo * i.addHours * W;
+    out.monthHi = hi * i.addHours * W;
+    out.yearMid = ((out.monthLo + out.monthHi) / 2) * 12;
+  } else {
+    out.monthLo = lo * i.hours * W;
+    out.monthHi = hi * i.hours * W;
+    out.deltaMid = (out.monthLo + out.monthHi) / 2 - i.income;
+    out.yearMid = out.deltaMid * 12;
+    out.hoursToMatch = i.income / (mid * W);
+  }
+  return out;
+}
+
+function bottleneck(i, r) {
+  const hrs = Math.round(r.hoursToMatch || 0);
+  const same = i.goal === "switch" && r.mid <= r.nowRate;
+  switch (i.pain) {
+    case "time":
+      if (i.goal === "side") return ["Your bottleneck is hours", "Your main income stops when you stop working. Extra hours in a skilled remote field can add a second stream at about " + usd(r.lo) + " to " + usd(r.hi) + " per hour."];
+      return ["Your bottleneck is hours", "At " + usd1(r.nowRate) + " per hour, your income only grows when your workweek does. At a typical " + usd(r.mid) + " per hour you could earn the same " + usd(i.income) + " a month in about " + hrs + " hours a week."];
+    case "ceiling":
+      if (same) return ["Your bottleneck is the ceiling on growth", "Your current rate of " + usd1(r.nowRate) + " per hour is already close to entry level in tech. The upside is the growth path. Skilled developers move up the pay scale much faster than most hourly jobs."];
+      return ["Your bottleneck is your pay ceiling", "Your rate of " + usd1(r.nowRate) + " per hour is below the " + usd(r.lo) + " to " + usd(r.hi) + " per hour a " + r.primary.name.toLowerCase() + " can start at, and tech pay keeps rising with skill."];
+    case "direction":
+      return ["Your bottleneck is direction", "Most people stall on what to learn first, not on ability. Based on your background, " + r.primary.name + " is the most direct first target, and a short call can turn it into a plan."];
+    default:
+      return ["Your bottleneck is flexibility", "Your job decides where and when you work. Remote tech roles and freelance projects let you choose your hours, and " + r.primary.name.toLowerCase() + " work is common remotely."];
+  }
+}
+
+function render() {
+  const income = clamp(parseFloat($("income").value) || 0, 0, 100000);
+  const hours = clamp(parseFloat($("hours").value) || 40, 1, 80);
+  const i = {
+    name: $("name").value.trim(),
+    income, hours,
+    goal: radio("goal"),
+    addHours: parseFloat($("addHours").value) || 10,
+    exp: $("exp").value,
+    pain: radio("pain")
+  };
+  const r = calc(i);
+
+  $("hoursOut").textContent = hours + " hrs";
+  $("addOut").textContent = i.addHours + " hrs";
+  $("addWrap").hidden = i.goal !== "side";
+
+  $("readTitle").textContent = i.name ? i.name + ", here is your path" : "Your path";
+
+  const big = $("big");
+  const tiles = [];
+  if (i.goal === "side") {
+    big.className = "big";
+    $("bigK").textContent = "Added income";
+    $("bigV").textContent = "+" + usd(r.monthLo) + " to " + usd(r.monthHi) + " /mo";
+    $("bigS").textContent = "Working " + i.addHours + " extra hours a week at the entry rate for " + r.primary.name + ".";
+    tiles.push(["Extra hours", i.addHours + " /wk"], ["Per month", usd((r.monthLo + r.monthHi) / 2)], ["Per year", usd(r.yearMid)]);
+  } else if (r.deltaMid > 0) {
+    big.className = "big";
+    $("bigK").textContent = "Potential monthly gain";
+    $("bigV").textContent = "+" + usd(r.monthLo - income > 0 ? r.monthLo - income : 0) + " to +" + usd(r.monthHi - income) + " /mo";
+    $("bigS").textContent = "At your current " + hours + " hours a week, working as a " + r.primary.name.toLowerCase() + ".";
+    tiles.push(["Rate now", usd1(r.nowRate) + "/hr"], ["Entry rate", usd(r.lo) + "-" + usd(r.hi)], ["Hours to match", Math.round(r.hoursToMatch) + " /wk"]);
+  } else {
+    big.className = "big flat";
+    $("bigK").textContent = "Honest read";
+    $("bigV").textContent = "Similar pay, more control";
+    $("bigS").textContent = "At entry level, " + r.primary.name.toLowerCase() + " pay may not beat " + usd(income) + " a month yet. The gain is flexibility, fewer hours and a higher ceiling over time.";
+    tiles.push(["Rate now", usd1(r.nowRate) + "/hr"], ["Entry rate", usd(r.lo) + "-" + usd(r.hi)], ["Hours to match", Math.round(r.hoursToMatch) + " /wk"]);
+  }
+  $("tiles").innerHTML = tiles.map(t => '<div class="tile"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span></div>').join("");
+
+  const maxRate = Math.max(r.nowRate, r.hi, 1);
+  const pct = (v) => clamp((v / maxRate) * 100, 0, 100).toFixed(1) + "%";
+  $("bars").innerHTML =
+    '<div class="bar-row"><span class="lab">You now</span><div class="track"><div class="fill" style="width:' + pct(r.nowRate) + '"></div></div><span class="val">' + usd1(r.nowRate) + '/hr</span></div>' +
+    '<div class="bar-row"><span class="lab">Remote tech</span><div class="track"><div class="fill range" style="width:' + pct(r.hi) + '"></div><div class="fill solid" style="width:' + pct(r.lo) + '"></div></div><span class="val">' + usd(r.lo) + '-' + usd(r.hi) + '/hr</span></div>';
+
+  const b = bottleneck(i, r);
+  $("bnTitle").textContent = b[0];
+  $("bnText").textContent = b[1];
+
+  $("paths").innerHTML = r.order.map((key, idx) => {
+    const p = CONFIG.paths[key];
+    const m = r.mult;
+    return '<div class="path' + (idx === 0 ? ' primary' : '') + '"><span class="n">' + p.name + (idx === 0 ? '<span class="tag">Best fit</span>' : '') + '</span><span class="r">' + usd(p.lo * m) + '-' + usd(p.hi * m) + '/hr</span><span class="d">' + p.desc + '</span></div>';
+  }).join("");
+
+  $("bookText").textContent = (i.name ? i.name + ", bring" : "Bring") + " your numbers from above. We will map your first 90 days, check if the path fits your schedule, and answer your questions.";
+  const base = CONFIG.calendlyUrl;
+  /* Calendly pre-fills custom questions in order: a1 is the first question, a2 the second, and so on. */
+  const reason = i.goal === "side" ? "Add side income"
+    : i.pain === "flex" ? "Work remotely"
+    : (i.pain === "time" || i.pain === "ceiling") ? "Earn more"
+    : "Switch careers";
+  const q = [];
+  if (i.name) q.push("name=" + encodeURIComponent(i.name));
+  q.push("a2=" + encodeURIComponent("About " + usd(income) + "/mo, " + hours + " hrs/wk. Calculator: " + usd1(r.nowRate) + "/hr now, entry remote " + usd(r.lo) + "-" + usd(r.hi) + "/hr, best fit " + r.primary.name + "."));
+  q.push("a3=" + encodeURIComponent(reason));
+  $("cta").href = base + (base.indexOf("?") > -1 ? "&" : "?") + q.join("&");
+}
+
+function renderCases() {
+  $("cases").innerHTML = CONFIG.results.map(c =>
+    '<article class="case">' +
+      '<b class="cname">' + c.name + '</b>' +
+      '<div class="swap">' +
+        '<div class="cell"><span class="k">Before</span><span class="v">' + c.before + '</span></div>' +
+        '<div class="cell after"><span class="k">After</span><span class="v">' + c.after + '</span></div>' +
+      '</div>' +
+      (c.note ? '<p class="time">' + c.note + '</p>' : '') +
+      '<a class="story" href="' + c.url + '" target="_blank" rel="noopener noreferrer">Read their story</a>' +
+    '</article>').join("");
+}
+
+function syncIncome(from) {
+  const v = from.value;
+  if (from.id === "incomeRange") $("income").value = v;
+  else $("incomeRange").value = clamp(parseFloat(v) || 0, 500, 15000);
+}
+
+$("income").addEventListener("input", (e) => { syncIncome(e.target); render(); });
+$("incomeRange").addEventListener("input", (e) => { syncIncome(e.target); render(); });
+["hours", "addHours", "name", "exp"].forEach(id => $(id).addEventListener("input", render));
+document.querySelectorAll('input[type="radio"]').forEach(el => el.addEventListener("change", render));
+$("calc").addEventListener("submit", (e) => e.preventDefault());
+
+renderCases();
+render();
+</script>
+</body>
+</html>
